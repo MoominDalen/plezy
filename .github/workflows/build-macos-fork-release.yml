@@ -12,6 +12,10 @@ on:
         required: false
         type: string
         default: 'Plezy macOS (IntroDB build)'
+  push:
+    tags:
+      - 'introdb-*'
+      - 'plezy-macos-*'
 
 permissions:
   contents: write
@@ -19,6 +23,8 @@ permissions:
 env:
   GIT_COMMIT_DART_DEFINE: --dart-define=GIT_COMMIT=${{ github.sha }}
   DONATIONS_DART_DEFINE: --dart-define=ENABLE_DONATIONS=false
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  RELEASE_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.release_name || format('Plezy macOS ({0})', github.ref_name) }}
 
 jobs:
   build-macos-dmg:
@@ -58,8 +64,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag }}
-          name: ${{ inputs.release_name }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
           draft: false
           prerelease: true
           generate_release_notes: true
