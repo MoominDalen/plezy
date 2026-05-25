@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
 import '../../../media/media_source_info.dart';
 import '../../../mpv/models.dart';
+import '../segment_marker_colors.dart';
 
 /// Custom painter that draws a segmented background track (split at chapter
-/// boundaries) and buffered range bars on the video timeline slider.
+/// boundaries), colored segment overlays (intro/recap/credits), and buffered
+/// range bars on the video timeline slider.
 class BufferRangePainter extends CustomPainter {
   final List<BufferRange> ranges;
   final Duration duration;
   final List<MediaChapter> chapters;
+  final List<MediaMarker> markers;
+  final bool showSegmentMarkersOnTimeline;
 
-  BufferRangePainter({required this.ranges, required this.duration, this.chapters = const []});
+  BufferRangePainter({
+    required this.ranges,
+    required this.duration,
+    this.chapters = const [],
+    this.markers = const [],
+    this.showSegmentMarkersOnTimeline = true,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -53,6 +63,23 @@ class BufferRangePainter extends CustomPainter {
 
     if (durationMs <= 0) return;
 
+    if (showSegmentMarkersOnTimeline) {
+      for (final marker in markers) {
+        final left = (marker.startTimeOffset / durationMs).clamp(0.0, 1.0) * size.width;
+        final right = (marker.endTimeOffset / durationMs).clamp(0.0, 1.0) * size.width;
+        if (right <= left) continue;
+
+        final segmentPaint = Paint()
+          ..color = segmentMarkerColor(marker.type).withValues(alpha: 0.55)
+          ..style = PaintingStyle.fill;
+
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(Rect.fromLTWH(left, y, right - left, trackHeight), Radius.circular(radius)),
+          segmentPaint,
+        );
+      }
+    }
+
     final bufPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
@@ -62,7 +89,6 @@ class BufferRangePainter extends CustomPainter {
       final bufRight = (range.end.inMilliseconds / durationMs).clamp(0.0, 1.0) * size.width;
       if (bufRight <= bufLeft) continue;
 
-      // Clip buffer to each segment it overlaps
       for (final (segLeft, segRight) in segments) {
         final clippedLeft = bufLeft.clamp(segLeft, segRight);
         final clippedRight = bufRight.clamp(segLeft, segRight);
@@ -80,6 +106,10 @@ class BufferRangePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(BufferRangePainter oldDelegate) {
-    return oldDelegate.duration != duration || oldDelegate.ranges != ranges || oldDelegate.chapters != chapters;
+    return oldDelegate.duration != duration ||
+        oldDelegate.ranges != ranges ||
+        oldDelegate.chapters != chapters ||
+        oldDelegate.markers != markers ||
+        oldDelegate.showSegmentMarkersOnTimeline != showSegmentMarkersOnTimeline;
   }
 }

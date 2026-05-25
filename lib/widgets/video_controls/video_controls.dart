@@ -56,7 +56,7 @@ import 'models/track_controls_state.dart';
 import 'widgets/double_tap_feedback.dart';
 import 'widgets/linux_keep_alive.dart';
 import 'widgets/mobile_skip_zones.dart';
-import 'widgets/skip_marker_button.dart';
+import 'widgets/segment_skip_buttons.dart';
 import 'widgets/track_chapter_controls.dart';
 import 'widgets/performance_overlay/performance_overlay.dart';
 import 'mobile_video_controls.dart';
@@ -307,6 +307,7 @@ class _PlexVideoControlsState extends State<PlexVideoControls>
   Timer? _lockIconTimer;
   bool get _clickVideoTogglesPlayback => _settings.read(SettingsService.clickVideoTogglesPlayback);
   bool get _showChapterMarkersOnTimeline => _settings.read(SettingsService.showChapterMarkersOnTimeline);
+  bool get _showSegmentMarkersOnTimeline => _settings.read(SettingsService.showSegmentMarkersOnTimeline);
   bool _isContentStripVisible = false; // Whether the swipe-up content strip is showing
   int _trafficLightVisibilityGeneration = 0;
 
@@ -330,6 +331,7 @@ class _PlexVideoControlsState extends State<PlexVideoControls>
   MediaMarker? _currentMarker;
   List<MediaMarker> _markers = [];
   bool _markersLoaded = false;
+  Duration _playbackPosition = Duration.zero;
   // Playback state subscription for auto-hide timer
   StreamSubscription<bool>? _playingSubscription;
   // Completed subscription to show controls when video ends
@@ -338,6 +340,7 @@ class _PlexVideoControlsState extends State<PlexVideoControls>
   StreamSubscription<Duration>? _positionSubscription;
   // Auto-skip state
   bool get _autoSkipIntro => _settings.read(SettingsService.autoSkipIntro);
+  bool get _autoSkipRecap => _settings.read(SettingsService.autoSkipRecap);
   bool get _autoSkipCredits => _settings.read(SettingsService.autoSkipCredits);
   int get _autoSkipDelay => _settings.read(SettingsService.autoSkipDelay);
   Timer? _autoSkipTimer;
@@ -399,13 +402,16 @@ class _PlexVideoControlsState extends State<PlexVideoControls>
       SettingsService.subtitleSyncOffset,
       SettingsService.rotationLocked,
       SettingsService.autoSkipIntro,
+      SettingsService.autoSkipRecap,
       SettingsService.autoSkipCredits,
+      SettingsService.enableIntroDb,
       SettingsService.autoSkipDelay,
       SettingsService.videoPlayerNavigationEnabled,
       SettingsService.showPerformanceOverlay,
       SettingsService.autoHidePerformanceOverlay,
       SettingsService.clickVideoTogglesPlayback,
       SettingsService.showChapterMarkersOnTimeline,
+      SettingsService.showSegmentMarkersOnTimeline,
     ]);
     _startHideTimer();
     _initKeyboardService();
@@ -641,8 +647,11 @@ class _PlexVideoControlsState extends State<PlexVideoControls>
                                                 player: widget.player,
                                                 metadata: widget.metadata,
                                                 chapters: _chapters,
+                                                markers: _markers,
                                                 chaptersLoaded: _chaptersLoaded,
+                                                markersLoaded: _markersLoaded,
                                                 showChapterMarkersOnTimeline: _showChapterMarkersOnTimeline,
+                                                showSegmentMarkersOnTimeline: _showSegmentMarkersOnTimeline,
                                                 seekTimeSmall: _seekTimeSmall,
                                                 trackChapterControls: _buildTrackChapterControlsWidget(
                                                   hideChaptersAndQueue: hasStripContent,
@@ -730,8 +739,9 @@ class _PlexVideoControlsState extends State<PlexVideoControls>
                       ),
                     ),
                   ),
-                  // Skip intro/credits button (auto-dismisses after 7s, then only shows with controls)
-                  if (_currentMarker != null &&
+                  // Skip intro / recap / credits / next episode (IntroDB + server markers)
+                  if (_markersLoaded &&
+                      _markers.isNotEmpty &&
                       widget.playNextFocusNode == null &&
                       (!_skipButtonDismissed || _showControls))
                     AnimatedPositioned(
@@ -746,7 +756,7 @@ class _PlexVideoControlsState extends State<PlexVideoControls>
                       child: AnimatedOpacity(
                         opacity: 1.0,
                         duration: tokens(context).slow,
-                        child: _buildSkipMarkerButton(),
+                        child: _buildSegmentSkipButtons(),
                       ),
                     ),
                   if (_showPerformanceOverlay)

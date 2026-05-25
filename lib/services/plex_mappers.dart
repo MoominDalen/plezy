@@ -1091,6 +1091,21 @@ List<MediaChapter> plexChaptersFromCacheJson(Map<String, dynamic>? metadataJson)
   return out;
 }
 
+String? _normalizePlexMarkerType(String type) {
+  switch (type.toLowerCase()) {
+    case 'intro':
+      return 'intro';
+    case 'recap':
+    case 'previouslyon':
+      return 'recap';
+    case 'credits':
+    case 'outro':
+      return 'credits';
+    default:
+      return null;
+  }
+}
+
 List<MediaMarker> plexMarkersFromCacheJson(Map<String, dynamic>? metadataJson) {
   final markerList = metadataJson?['Marker'];
   if (markerList is! List) return const [];
@@ -1102,7 +1117,9 @@ List<MediaMarker> plexMarkersFromCacheJson(Map<String, dynamic>? metadataJson) {
     final start = flexibleInt(marker['startTimeOffset']);
     final end = flexibleInt(marker['endTimeOffset']);
     if (id == null || type == null || start == null || end == null) continue;
-    out.add(MediaMarker(id: id, type: type, startTimeOffset: start, endTimeOffset: end));
+    final normalized = _normalizePlexMarkerType(type);
+    if (normalized == null) continue;
+    out.add(MediaMarker(id: id, type: normalized, startTimeOffset: start, endTimeOffset: end));
   }
   return out;
 }

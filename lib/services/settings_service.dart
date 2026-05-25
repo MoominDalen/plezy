@@ -303,8 +303,11 @@ class SettingsService extends BaseSharedPreferencesService {
   static const cleanedOldImageCache = BoolPref('cleaned_old_image_cache');
   static const rememberTrackSelections = BoolPref('remember_track_selections', defaultValue: true);
   static const showChapterMarkersOnTimeline = BoolPref('show_chapter_markers_on_timeline', defaultValue: true);
+  static const showSegmentMarkersOnTimeline = BoolPref('show_segment_markers_on_timeline', defaultValue: true);
   static const clickVideoTogglesPlayback = BoolPref('click_video_toggles_playback');
+  static const enableIntroDb = BoolPref('enable_introdb', defaultValue: true);
   static const autoSkipIntro = BoolPref('auto_skip_intro');
+  static const autoSkipRecap = BoolPref('auto_skip_recap');
   static const autoSkipCredits = BoolPref('auto_skip_credits');
   static const forceSkipMarkerFallback = BoolPref('force_skip_marker_fallback');
   static const autoSkipDelay = IntPref('auto_skip_delay', defaultValue: 5);

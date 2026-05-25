@@ -17,8 +17,11 @@ class TimelineSlider extends StatefulWidget {
   final Duration duration;
   final List<BufferRange> bufferRanges;
   final List<MediaChapter> chapters;
+  final List<MediaMarker> markers;
   final bool chaptersLoaded;
+  final bool markersLoaded;
   final bool showChapterMarkersOnTimeline;
+  final bool showSegmentMarkersOnTimeline;
   final ValueChanged<Duration> onSeek;
   final ValueChanged<Duration> onSeekEnd;
 
@@ -50,8 +53,11 @@ class TimelineSlider extends StatefulWidget {
     required this.duration,
     this.bufferRanges = const [],
     required this.chapters,
+    this.markers = const [],
     required this.chaptersLoaded,
+    this.markersLoaded = false,
     this.showChapterMarkersOnTimeline = true,
+    this.showSegmentMarkersOnTimeline = true,
     required this.onSeek,
     required this.onSeekEnd,
     this.focusNode,
@@ -245,6 +251,8 @@ class _TimelineSliderState extends State<TimelineSlider> {
                     ranges: widget.bufferRanges,
                     duration: widget.duration,
                     chapters: widget.chaptersLoaded && widget.showChapterMarkersOnTimeline ? widget.chapters : const [],
+                    markers: widget.markersLoaded && widget.showSegmentMarkersOnTimeline ? widget.markers : const [],
+                    showSegmentMarkersOnTimeline: widget.showSegmentMarkersOnTimeline,
                   ),
                 ),
               ),

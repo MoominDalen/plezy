@@ -236,6 +236,9 @@ String? _jellyfinSegmentMarkerType(String? value) {
   switch (value?.toLowerCase()) {
     case 'intro':
       return 'intro';
+    case 'recap':
+    case 'previouslyon':
+      return 'recap';
     case 'outro':
     case 'credits':
       return 'credits';

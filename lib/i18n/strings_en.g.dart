@@ -713,6 +713,24 @@ class TranslationsSettingsEn {
 	/// en: 'Automatically skip credits and play next episode'
 	String get autoSkipCreditsDescription => 'Automatically skip credits and play next episode';
 
+	/// en: 'Auto Skip Recap'
+	String get autoSkipRecap => 'Auto Skip Recap';
+
+	/// en: 'Automatically skip previously-on recap segments'
+	String get autoSkipRecapDescription => 'Automatically skip previously-on recap segments';
+
+	/// en: 'Use IntroDB'
+	String get enableIntroDb => 'Use IntroDB';
+
+	/// en: 'Fetch intro, recap, and outro times from introdb.app when your server has none'
+	String get enableIntroDbDescription => 'Fetch intro, recap, and outro times from introdb.app when your server has none';
+
+	/// en: 'Show segment colors on seek bar'
+	String get showSegmentMarkersOnTimeline => 'Show segment colors on seek bar';
+
+	/// en: 'Color intro (blue), recap (amber), and credits (purple) on the timeline'
+	String get showSegmentMarkersOnTimelineDescription => 'Color intro (blue), recap (amber), and credits (purple) on the timeline';
+
 	/// en: 'Force Fallback Markers'
 	String get forceSkipMarkerFallback => 'Force Fallback Markers';
 
@@ -1368,6 +1386,18 @@ class TranslationsVideoControlsEn {
 
 	/// en: 'Long press to unlock'
 	String get longPressToUnlock => 'Long press to unlock';
+
+	/// en: 'Skip Intro'
+	String get skipIntro => 'Skip Intro';
+
+	/// en: 'Skip Recap'
+	String get skipRecap => 'Skip Recap';
+
+	/// en: 'Skip Credits'
+	String get skipCredits => 'Skip Credits';
+
+	/// en: 'Next Episode'
+	String get nextEpisode => 'Next Episode';
 
 	/// en: 'Video timeline'
 	String get timelineSlider => 'Video timeline';
@@ -4339,6 +4369,12 @@ extension on Translations {
 			'settings.autoSkipIntroDescription' => 'Automatically skip intro markers after a few seconds',
 			'settings.autoSkipCredits' => 'Auto Skip Credits',
 			'settings.autoSkipCreditsDescription' => 'Automatically skip credits and play next episode',
+			'settings.autoSkipRecap' => 'Auto Skip Recap',
+			'settings.autoSkipRecapDescription' => 'Automatically skip previously-on recap segments',
+			'settings.enableIntroDb' => 'Use IntroDB',
+			'settings.enableIntroDbDescription' => 'Fetch intro, recap, and outro times from introdb.app when your server has none',
+			'settings.showSegmentMarkersOnTimeline' => 'Show segment colors on seek bar',
+			'settings.showSegmentMarkersOnTimelineDescription' => 'Color intro (blue), recap (amber), and credits (purple) on the timeline',
 			'settings.forceSkipMarkerFallback' => 'Force Fallback Markers',
 			'settings.forceSkipMarkerFallbackDescription' => 'Use chapter title patterns even when Plex has markers',
 			'settings.autoSkipDelay' => 'Auto Skip Delay',
@@ -4555,6 +4591,10 @@ extension on Translations {
 			'videoControls.lockScreen' => 'Lock screen',
 			'videoControls.screenLockButton' => 'Screen lock',
 			'videoControls.longPressToUnlock' => 'Long press to unlock',
+			'videoControls.skipIntro' => 'Skip Intro',
+			'videoControls.skipRecap' => 'Skip Recap',
+			'videoControls.skipCredits' => 'Skip Credits',
+			'videoControls.nextEpisode' => 'Next Episode',
 			'videoControls.timelineSlider' => 'Video timeline',
 			'videoControls.volumeSlider' => 'Volume level',
 			'videoControls.endsAt' => ({required Object time}) => 'Ends at ${time}',

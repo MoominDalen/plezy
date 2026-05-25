@@ -14,8 +14,11 @@ import 'timeline_slider.dart';
 class VideoTimelineBar extends StatelessWidget {
   final Player player;
   final List<MediaChapter> chapters;
+  final List<MediaMarker> markers;
   final bool chaptersLoaded;
+  final bool markersLoaded;
   final bool showChapterMarkersOnTimeline;
+  final bool showSegmentMarkersOnTimeline;
   final ValueChanged<Duration> onSeek;
   final ValueChanged<Duration> onSeekEnd;
 
@@ -49,8 +52,11 @@ class VideoTimelineBar extends StatelessWidget {
     super.key,
     required this.player,
     required this.chapters,
+    this.markers = const [],
     required this.chaptersLoaded,
+    this.markersLoaded = false,
     this.showChapterMarkersOnTimeline = true,
+    this.showSegmentMarkersOnTimeline = true,
     required this.onSeek,
     required this.onSeekEnd,
     this.horizontalLayout = true,
@@ -162,8 +168,11 @@ class VideoTimelineBar extends StatelessWidget {
       duration: duration,
       bufferRanges: bufferRanges,
       chapters: chapters,
+      markers: markers,
       chaptersLoaded: chaptersLoaded,
+      markersLoaded: markersLoaded,
       showChapterMarkersOnTimeline: showChapterMarkersOnTimeline,
+      showSegmentMarkersOnTimeline: showSegmentMarkersOnTimeline,
       onSeek: onSeek,
       onSeekEnd: onSeekEnd,
       focusNode: focusNode,

@@ -258,6 +258,7 @@ class MediaMarker {
   Duration get endTime => Duration(milliseconds: endTimeOffset);
 
   bool get isIntro => type == 'intro';
+  bool get isRecap => type == 'recap';
   bool get isCredits => type == 'credits';
 
   bool containsPosition(Duration position) {
@@ -273,8 +274,14 @@ class PlaybackExtras {
 
   PlaybackExtras({required this.chapters, required this.markers});
 
+  static final _recapPattern = RegExp(
+    r'(?:^|\b)(?:recap|previously\s+on|last\s+time)(?:\b|$)',
+    caseSensitive: false,
+  );
+
   static String? _classifyChapterTitle(String title, RegExp introPattern, RegExp creditsPattern) {
     if (introPattern.hasMatch(title)) return 'intro';
+    if (_recapPattern.hasMatch(title)) return 'recap';
     if (creditsPattern.hasMatch(title)) return 'credits';
     return null;
   }
@@ -321,7 +328,7 @@ class PlaybackExtras {
     if (markers.isNotEmpty) {
       // Reclassify markers with non-standard types against the patterns.
       final reclassified = markers.map((m) {
-        if (m.type == 'intro' || m.type == 'credits') return m;
+        if (m.type == 'intro' || m.type == 'recap' || m.type == 'credits') return m;
         final newType = _classifyChapterTitle(m.type, introPattern, creditsPattern);
         if (newType != null) {
           return MediaMarker(
