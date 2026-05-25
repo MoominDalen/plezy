@@ -155,6 +155,12 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
           title: t.settings.showChapterMarkersOnTimeline,
           subtitle: t.settings.showChapterMarkersOnTimelineDescription,
         ),
+        SettingSwitchTile(
+          pref: SettingsService.showSegmentMarkersOnTimeline,
+          icon: Symbols.palette_rounded,
+          title: t.settings.showSegmentMarkersOnTimeline,
+          subtitle: t.settings.showSegmentMarkersOnTimelineDescription,
+        ),
         if (!isMobile)
           SettingSwitchTile(
             pref: SettingsService.clickVideoTogglesPlayback,
@@ -171,10 +177,22 @@ class _PlaybackSettingsScreenState extends State<PlaybackSettingsScreen> {
           subtitle: t.settings.autoSkipIntroDescription,
         ),
         SettingSwitchTile(
+          pref: SettingsService.autoSkipRecap,
+          icon: Symbols.history_rounded,
+          title: t.settings.autoSkipRecap,
+          subtitle: t.settings.autoSkipRecapDescription,
+        ),
+        SettingSwitchTile(
           pref: SettingsService.autoSkipCredits,
           icon: Symbols.skip_next_rounded,
           title: t.settings.autoSkipCredits,
           subtitle: t.settings.autoSkipCreditsDescription,
+        ),
+        SettingSwitchTile(
+          pref: SettingsService.enableIntroDb,
+          icon: Symbols.database_rounded,
+          title: t.settings.enableIntroDb,
+          subtitle: t.settings.enableIntroDbDescription,
         ),
         SettingSwitchTile(
           pref: SettingsService.forceSkipMarkerFallback,

@@ -500,11 +500,13 @@ void main() {
         ],
       });
 
-      expect(markers.map((m) => m.type), ['intro', 'credits']);
+      expect(markers.map((m) => m.type), ['intro', 'credits', 'recap']);
       expect(markers[0].startTimeOffset, 5000);
       expect(markers[0].endTimeOffset, 45000);
       expect(markers[1].startTimeOffset, 90000);
       expect(markers[1].endTimeOffset, 100000);
+      expect(markers[2].startTimeOffset, 0);
+      expect(markers[2].endTimeOffset, 4000);
     });
 
     test('keeps native segments and fills missing marker types from chapters', () {

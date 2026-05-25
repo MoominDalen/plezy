@@ -7,6 +7,8 @@ extension _PlexVideoControlsMarkerMethods on _PlexVideoControlsState {
         return;
       }
 
+      _playbackPosition = position;
+
       MediaMarker? foundMarker;
       for (final marker in _markers) {
         if (marker.containsPosition(position)) {
@@ -17,6 +19,9 @@ extension _PlexVideoControlsMarkerMethods on _PlexVideoControlsState {
 
       if (foundMarker != _currentMarker && mounted) {
         _updateCurrentMarker(foundMarker);
+      } else if (mounted) {
+        // Rebuild segment buttons when position changes within/out of segments.
+        _setControlsState(() {});
       }
     });
   }
@@ -36,13 +41,10 @@ extension _PlexVideoControlsMarkerMethods on _PlexVideoControlsState {
 
     _startAutoSkipTimer(foundMarker);
 
-    // Auto-skip OFF: dismiss button after 7s if no interaction
-    // Auto-skip ON: button stays until controls hide
     if (!_shouldAutoSkipForMarker(foundMarker)) {
       _startSkipButtonDismissTimer();
     }
 
-    // Auto-focus skip button on TV when marker appears (only in keyboard/TV mode)
     if (PlatformDetector.isTV() && InputModeTracker.isKeyboardMode(context)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -52,10 +54,7 @@ extension _PlexVideoControlsMarkerMethods on _PlexVideoControlsState {
     }
   }
 
-  Future<void> _skipMarker({bool skipAutoPlayCountdown = false}) async {
-    if (_currentMarker == null) return;
-
-    final marker = _currentMarker!;
+  Future<void> _skipMarker(MediaMarker marker, {bool skipAutoPlayCountdown = false}) async {
     final endTime = marker.endTime;
     final duration = widget.player.state.duration;
     final isAtEnd = duration > Duration.zero && (duration - endTime).inMilliseconds <= 1000;
@@ -64,8 +63,6 @@ extension _PlexVideoControlsMarkerMethods on _PlexVideoControlsState {
       if (!skipAutoPlayCountdown && widget.onNext != null) {
         widget.onNext!.call();
       } else {
-        // Seeking to EOF is unreliable due to position stream throttling,
-        // so pause and defer to the parent's completion flow.
         await widget.player.pause();
         widget.onReachedEnd?.call(skipAutoPlayCountdown: skipAutoPlayCountdown);
       }
@@ -81,10 +78,27 @@ extension _PlexVideoControlsMarkerMethods on _PlexVideoControlsState {
     _cancelSkipButtonDismissTimer();
   }
 
+  Future<void> _skipMarkerByType(String type) async {
+    for (final marker in _markers) {
+      if (marker.type == type) {
+        await _skipMarker(marker);
+        return;
+      }
+    }
+  }
+
+  void _playNextEpisode() {
+    if (widget.onNext != null) {
+      widget.onNext!.call();
+      return;
+    }
+    unawaited(_skipMarkerByType('credits'));
+  }
+
   void _startAutoSkipTimer(MediaMarker marker) {
     _cancelAutoSkipTimer();
 
-    final shouldAutoSkip = (marker.isCredits && _autoSkipCredits) || (!marker.isCredits && _autoSkipIntro);
+    final shouldAutoSkip = _shouldAutoSkipForMarker(marker);
 
     if (!shouldAutoSkip || _autoSkipDelay <= 0) return;
 
@@ -121,8 +135,6 @@ extension _PlexVideoControlsMarkerMethods on _PlexVideoControlsState {
     }
   }
 
-  /// Starts/restarts the skip button dismiss timer. When it fires, hides the
-  /// button and cancels any active auto-skip countdown.
   void _startSkipButtonDismissTimer() {
     _skipButtonDismissTimer?.cancel();
     _skipButtonDismissTimer = Timer(const Duration(seconds: 7), () {
@@ -139,14 +151,16 @@ extension _PlexVideoControlsMarkerMethods on _PlexVideoControlsState {
     _skipButtonDismissTimer = null;
   }
 
-  /// Perform the appropriate skip action based on marker type and next episode availability
   void _performAutoSkip({bool skipAutoPlayCountdown = false}) {
     if (_currentMarker == null) return;
-    unawaited(_skipMarker(skipAutoPlayCountdown: skipAutoPlayCountdown));
+    unawaited(_skipMarker(_currentMarker!, skipAutoPlayCountdown: skipAutoPlayCountdown));
   }
 
   bool _shouldAutoSkipForMarker(MediaMarker marker) {
-    return (marker.isCredits && _autoSkipCredits) || (!marker.isCredits && _autoSkipIntro);
+    if (marker.isCredits) return _autoSkipCredits;
+    if (marker.isRecap) return _autoSkipRecap;
+    if (marker.isIntro) return _autoSkipIntro;
+    return false;
   }
 
   bool _shouldShowAutoSkip() {
@@ -154,10 +168,12 @@ extension _PlexVideoControlsMarkerMethods on _PlexVideoControlsState {
     return _shouldAutoSkipForMarker(_currentMarker!);
   }
 
-  Widget _buildSkipMarkerButton() {
+  Widget _buildSegmentSkipButtons() {
     final isAutoSkipActive = _autoSkipTimer?.isActive ?? false;
-    return SkipMarkerButton(
-      marker: _currentMarker!,
+    return SegmentSkipButtons(
+      currentMarker: _currentMarker,
+      markers: _markers,
+      position: _playbackPosition,
       playerDuration: widget.player.state.duration,
       hasNextEpisode: widget.onNext != null,
       isAutoSkipActive: isAutoSkipActive,
@@ -166,7 +182,10 @@ extension _PlexVideoControlsMarkerMethods on _PlexVideoControlsState {
       autoSkipProgress: _autoSkipProgress,
       focusNode: _skipMarkerFocusNode,
       onCancelAutoSkip: _cancelAutoSkipTimer,
-      onPerformAutoSkip: _performAutoSkip,
+      onSkipIntro: () => unawaited(_skipMarkerByType('intro')),
+      onSkipRecap: () => unawaited(_skipMarkerByType('recap')),
+      onSkipCredits: () => unawaited(_skipMarkerByType('credits')),
+      onNextEpisode: _playNextEpisode,
       onFocusDown: () => _desktopControlsKey.currentState?.requestPlayPauseFocus(),
     );
   }
