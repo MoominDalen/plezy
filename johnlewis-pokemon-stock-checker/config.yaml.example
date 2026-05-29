@@ -1,0 +1,19 @@
+# Copy to config.yaml and edit. Products are checked every POLL_INTERVAL_SECONDS.
+
+products:
+  # Use a direct product page URL (recommended), e.g. from search:
+  # https://www.johnlewis.com/search?search-term=pokemon+cards
+  - name: "Pokemon TCG — replace URL"
+    url: "https://www.johnlewis.com/search?search-term=pokemon+cards"
+    sku: ""
+
+  # Example single-product watch:
+  # - name: "Pokemon Scarlet & Violet booster"
+  #   url: "https://www.johnlewis.com/some-product-slug/p123456789"
+  #   sku: ""
+
+# Optional: discover products from a search URL (checks more pages each poll).
+search:
+  enabled: false
+  url: "https://www.johnlewis.com/search?search-term=pokemon+cards"
+  max_products: 20

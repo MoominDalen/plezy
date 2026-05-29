@@ -1,0 +1,6 @@
+"""Entry point for John Lewis Pokemon stock checker."""
+
+from telegram_app import main
+
+if __name__ == "__main__":
+    main()
