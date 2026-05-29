@@ -1,152 +1,77 @@
-# John Lewis Pokemon Card Stock Checker (Telegram)
+# StockWatch — John Lewis & Pokemon Center UK
 
-Monitors [John Lewis](https://www.johnlewis.com) product pages for Pokemon TCG stock and sends **instant Telegram alerts** when items come back in stock.
+Monitor **John Lewis** Pokemon TCG products and **Pokemon Center UK** queues, with instant Telegram alerts and a **native macOS app**.
 
-Default poll interval is **2 seconds** (configurable). Alerts fire on restocks (out of stock → in stock), not on every poll.
+## Features
 
-## What you need
+| Feature | Description |
+|--------|-------------|
+| John Lewis stock | Polls every 2s (configurable), restock alerts |
+| `pokemon-tcg` discovery | Scans John Lewis for product URLs with `pokemon-tcg` in the slug |
+| Product images | Cards show og:image / CDN thumbnails in the macOS UI |
+| Pokemon Center UK | Monitors [pokemoncenter.com/en-gb](https://www.pokemoncenter.com/en-gb) for queue / Queue-it |
+| macOS app | SwiftUI UI — add, edit, scan, live updates via WebSocket |
+| Telegram bot | Optional CLI bot (`python main.py`) |
 
-- Python 3.10+
-- A Telegram account
-- A machine that can reach `johnlewis.com` (UK home broadband/VPS works best; some cloud IPs are blocked)
+---
 
-## Quick start
+## macOS app (recommended)
 
-### 1. Create a Telegram bot
+See **[macos/README.md](macos/README.md)** for full steps.
 
-1. Open Telegram and message [@BotFather](https://t.me/BotFather).
-2. Send `/newbot` and follow the prompts.
-3. Copy the **bot token** (looks like `123456789:ABC...`).
+1. Start backend: `./run_api.sh`
+2. Open `macos/StockWatch/StockWatch.xcodeproj` in Xcode → Run
+3. Click **Scan John Lewis (pokemon-tcg)** in the sidebar
+4. Watch the product grid; green border = in stock
 
-### 2. Get your chat ID (optional but recommended)
+---
 
-Either:
-
-- Message [@userinfobot](https://t.me/userinfobot) and copy your **Id**, or
-- Start your new bot and send `/start` — the checker registers your chat automatically.
-
-### 3. Install and configure
+## Telegram-only mode
 
 ```bash
-cd johnlewis-pokemon-stock-checker
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-
-cp .env.example .env
+cp .env.example .env   # TELEGRAM_BOT_TOKEN, etc.
 cp config.yaml.example config.yaml
-```
-
-Edit `.env`:
-
-```env
-TELEGRAM_BOT_TOKEN=your_token_from_botfather
-TELEGRAM_CHAT_ID=your_numeric_chat_id
-POLL_INTERVAL_SECONDS=2
-```
-
-Edit `config.yaml` and add **product page URLs** from John Lewis (not search pages unless you enable search mode):
-
-```yaml
-products:
-  - name: "Pokemon TCG Booster"
-    url: "https://www.johnlewis.com/your-product-slug/p123456789"
-    sku: ""
-```
-
-To find URLs: search [johnlewis.com](https://www.johnlewis.com/search?search-term=pokemon+cards), open a product, copy the address bar link.
-
-### 4. Run
-
-```bash
 python main.py
 ```
 
-In Telegram, open your bot and send **`/start`**.
+Send `/start` to your bot, `/add <johnlewis-url>`, `/status`.
 
-Leave the process running (Raspberry Pi, home PC, or VPS). When stock appears, you get a message with the product link.
+---
 
-## Telegram commands
+## API (for the Mac app or automation)
 
-| Command | Description |
-|--------|-------------|
-| `/start` | Register for alerts and show help |
-| `/status` | Check current stock now |
-| `/add <url>` | Add a John Lewis product URL to the watchlist |
-| `/list` | Show watched products |
-| `/help` | Same as `/start` |
+With `./run_api.sh` running:
 
-Example:
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/products` | List watches |
+| POST | `/products` | Add product |
+| POST | `/scan/johnlewis` | Discover `pokemon-tcg` URLs |
+| GET | `/pokemoncenter` | UK queue status |
+| WS | `/ws` | Live updates |
 
-```
-/add https://www.johnlewis.com/some-pokemon-product/p113617158
-```
-
-## Instant notifications
-
-- **`POLL_INTERVAL_SECONDS=2`** — checks every 2 seconds (minimum 1).
-- Uses John Lewis’s stock API when available, with a page-parse fallback.
-- Notifies when status changes **out of stock → in stock** (avoids spam on startup if already in stock).
-
-For the fastest alerts, run on a stable UK connection and avoid intervals below 1 second (unnecessary load).
-
-## Optional: watch search results
-
-In `config.yaml`:
-
-```yaml
-search:
-  enabled: true
-  url: "https://www.johnlewis.com/search?search-term=pokemon+cards"
-  max_products: 20
-```
-
-This discovers product links from search/category pages. Prefer explicit product URLs for reliability.
-
-## Run in the background (Linux)
-
-```bash
-# Example systemd user service — adjust paths
-cat > ~/.config/systemd/user/jl-pokemon-stock.service << 'EOF'
-[Unit]
-Description=John Lewis Pokemon stock checker
-After=network-online.target
-
-[Service]
-WorkingDirectory=/path/to/johnlewis-pokemon-stock-checker
-EnvironmentFile=/path/to/johnlewis-pokemon-stock-checker/.env
-ExecStart=/path/to/johnlewis-pokemon-stock-checker/.venv/bin/python main.py
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=default.target
-EOF
-
-systemctl --user enable --now jl-pokemon-stock.service
-```
-
-## Troubleshooting
-
-| Issue | Fix |
-|-------|-----|
-| No alerts | Send `/start` to the bot; set `TELEGRAM_CHAT_ID` in `.env` |
-| `No SKU found` | Open the product page → View Source → search `skuId` → put value in `sku:` in config |
-| Timeouts / errors | John Lewis may block datacenter IPs; run from home UK network |
-| Already in stock on first run | Normal — you only get alerted on the next **restock** |
+---
 
 ## Project layout
 
 ```
 johnlewis-pokemon-stock-checker/
-  main.py              # Entry point
-  telegram_app.py      # Bot + notification delivery
-  monitor.py           # Polling loop
-  jl_client.py         # John Lewis stock API / page parsing
-  config.yaml          # Your watchlist (create from example)
-  data/                # State + registered chat IDs (auto-created)
+  api/server.py          # FastAPI + WebSocket
+  discovery/             # pokemon-tcg URL scanner
+  pc_client.py           # Pokemon Center UK queue detection
+  macos/StockWatch/      # SwiftUI macOS app
+  run_api.sh             # Start backend
+  main.py                # Telegram bot entry
 ```
 
-## Legal / polite use
+---
 
-Use reasonable poll intervals. This tool is for personal restock alerts only; respect John Lewis terms of service.
+## Troubleshooting
+
+- **Backend offline in app** — Run `./run_api.sh` from this folder first.
+- **403 / timeouts** — Run on a UK home connection; many cloud IPs are blocked.
+- **No SKU** — Set `sku` manually from page source (`skuId`).
+
+Use reasonable poll intervals and personal use only.

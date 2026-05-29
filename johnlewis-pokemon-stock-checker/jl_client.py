@@ -373,3 +373,17 @@ def _html_around_sku(html: str, sku: str, *, radius: int = 1200) -> str | None:
     start = max(0, index - radius)
     end = min(len(html), index + radius)
     return html[start:end]
+
+
+def extract_product_image(html: str) -> str | None:
+    """Best-effort product hero image from a John Lewis product page."""
+    for pattern in (
+        r'<meta[^>]+property="og:image"[^>]+content="([^"]+)"',
+        r'<meta[^>]+content="([^"]+)"[^>]+property="og:image"',
+        r'"heroImage"\s*:\s*"(https://media\.johnlewiscontent\.com[^"]+)"',
+        r'"(?:primary|main)Image"\s*:\s*"(https://media\.johnlewiscontent\.com[^"]+)"',
+    ):
+        match = re.search(pattern, html, re.IGNORECASE)
+        if match:
+            return match.group(1)
+    return None
