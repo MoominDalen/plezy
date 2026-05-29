@@ -22,9 +22,9 @@ jobs:
       - name: Build DMG
         run: |
           chmod +x scripts/build-dmg.sh
-          VERSION="${GITHUB_REF_NAME#v}" ./scripts/build-dmg.sh
+          ./scripts/build-dmg.sh
         env:
-          VERSION: ${{ github.ref_type == 'tag' && github.ref_name || format('0.0.{0}', github.run_number) }}
+          VERSION: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('1.0.{0}', github.run_number) }}
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
