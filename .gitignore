@@ -1,0 +1,14 @@
+.env
+config.yaml
+data/
+.build/
+build/
+dist/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+macos/**/DerivedData/
+*.dmg
